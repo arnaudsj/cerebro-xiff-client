@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()" borderColor="#FFFFFF">
+
+<mx:Script>
+<![CDATA[
+import org.jivesoftware.xiff.data.Message;
+import org.jivesoftware.xiff.events.MessageEvent;
+import org.jivesoftware.xiff.core.JID;
+
+import org.jivesoftware.xiff.core.XMPPSocketConnection;
+import org.jivesoftware.xiff.events.LoginEvent;
+import org.jivesoftware.xiff.events.XIFFErrorEvent;
+
+import org.jivesoftware.xiff.data.Presence;
+import org.jivesoftware.xiff.im.Roster;
+import org.jivesoftware.xiff.events.RosterEvent;
+
+
+private var connection:XMPPSocketConnection;
+
+private function init():void
+{
+	connection = new XMPPSocketConnection();
+
+	connection.username = "testuser";
+	connection.password = "test";
+	connection.server = "pegasus.local";
+	connection.port = 5222;
+
+	connection.addEventListener(LoginEvent.LOGIN, onLogin);
+    connection.addEventListener(XIFFErrorEvent.XIFF_ERROR, onError);
+    	
+	connection.connect("standard");
+
+	trace("-> connected successfully to "+ connection.server);
+}
+
+private function onLogin(e:LoginEvent):void
+{
+	trace("-> logged in successfully as "+connection.username);
+	
+	// Start listening now to messages we might receive!
+	connection.addEventListener(MessageEvent.MESSAGE, onMessage);	
+
+	var me:JID = new JID("testuser@pegasus.local");
+	var bud:JID = new JID("arnaudsj@pegasus.local");
+		
+	// Send Presence to let our buddies we are here
+	var pres:Presence = new Presence(bud, me, "", Presence.SHOW_CHAT, "", 5);
+	connection.send(pres);
+	trace("-> set presence to online");
+	
+	// Send A Message to a test user
+	var msg:Message = new Message( bud, null, "Hello, world!", null, Message.CHAT_TYPE );
+ 	connection.send(msg);
+ 	trace("-> sent message successfully to: "+ 	bud.bareJid);
+}
+
+private function onMessage(e:MessageEvent):void{
+	var mes:Message = e.data;
+	trace("-> received message successfully from " + mes.from +" (body=> '" + mes.body + "')");	
+}
+
+private function onError(e:XIFFErrorEvent):void
+{
+	trace("Error:" + e.errorCode);
+}
+
+		
+		
+]]>
+</mx:Script>
+
+</mx:Application>
